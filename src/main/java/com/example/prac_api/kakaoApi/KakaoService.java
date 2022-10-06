@@ -149,4 +149,33 @@ public class KakaoService {
 
         return result;
     }
+
+    public String getAgreementInfo(String accessToken) {
+        // 일단 따라하기
+        String result = "";
+        // 여기에 어떠한 URL이 들어감 -> 이해를 못해서 안씀
+        String host = "";
+
+        try {
+            URL url = new URL(host);
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
+            urlConnection.setRequestMethod("GET");
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                result += line;
+            }
+
+            int responseCode = urlConnection.getResponseCode();
+            System.out.println("responseCode : " + responseCode);
+
+            br.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

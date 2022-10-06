@@ -13,12 +13,7 @@ public class PracApiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(PracApiApplication.class, args);
-		try{
-			KakaoService test = new KakaoService();
-			System.out.println(test.getToken("b0bee9c4437f02eeebc3eb5784d659e5"));
-		} catch(IOException e){
-			e.printStackTrace();
-		}
+
 	}
 
 }

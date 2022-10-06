@@ -2,17 +2,20 @@ package com.example.prac_api.kakaoApi;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class KakaoService {
 
-    public String getToken() throws IOException{
+    // 인가 코드로 토큰을 얻는 과정
+    public String getToken(String code) throws IOException {
         String host = "https://kauth.kakao.com/oauth/token";
         /*
         host의 url은 그냥 문자열임. 우리가 원하는건 문자열이 아니라 url임
@@ -24,7 +27,7 @@ public class KakaoService {
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
 
         String token = " ";
-        try{
+        try {
             // URL 요청 방법
             // GET, POST, HEAD, OPTIONS, PUT, DELETE, TRACE 중 하나를 선택하면 됨
             urlConnection.setRequestMethod("POST");
@@ -48,15 +51,15 @@ public class KakaoService {
             StringBuilder sb = new StringBuilder();
             sb.append("grant_type=authorization_code");
             sb.append("&client_id=2aad40910868e3c5fa9594f8de34a07b");
-            sb.append("&redirect_uri=http://localhost:8080/member/kakao");
-//            sb.append("&code=" + code)
+            sb.append("&redirect_uri=http://localhost:8080");
+            sb.append("&code = " + code);
 
             // 그냥 출력을 보는 것임
             bw.write(sb.toString());
             bw.flush();
 
             int responseCode = urlConnection.getResponseCode();
-            System.out.println("responseCode = " + responseCode);
+            System.out.println("responseCode : " + responseCode);
 
             // 위에 적혀있는 writer와 반대의 개념이라고 생각하면 됨
             // .readLine() 입력을 받는 것 -> 리턴값이 String이고, 예외처리를 해서 사용해야함
@@ -65,21 +68,85 @@ public class KakaoService {
             String line = "";
             String result = "";
 
-            while((line = br.readLine()) != null){
+            while ((line = br.readLine()) != null) {
                 result += line;
             }
 
             JSONParser parser = new JSONParser();
+
+            // JSON 데이터를 JSON 객체로 만들어 줌
+            // .parse() 를 사용하려면 ParseException을 예외처리 해줘야함
             JSONObject elem = (JSONObject) parser.parse(result);
 
+            String accessToken = elem.get("access_token").toString();
+            String refreshToken = elem.get("refresh_token").toString();
+            System.out.println("access_token : " + accessToken);
+            System.out.println("refresh_token : " + refreshToken);
+
+            token = accessToken;
+
+            br.close();
             bw.close();
 
-        } catch(IOException e){
-            e.printStackTrace();
-        } catch(ParseException e){
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
 
         return token;
+    }
+
+    // 발급 받은 토큰으로 사용자 정보 조회
+    public Map<String, Object> getUserInfo(String accessToken) throws IOException {
+        // host에 어떤 URL이 들어가는지 확인해봐야함
+        String host = "";
+        Map<String, Object> result = new HashMap<>();
+        try {
+            URL url = new URL(host);
+
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+
+            // 요청(Response Data)의 데이터 타입을 정하는 것
+            // 첫번째 파라미터 - the keyword by which the request is known
+            // 두번째 파라미터 - the value associated with it.
+            urlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
+            urlConnection.setRequestMethod("GET"); // 조회라서 GET임
+
+            int responseCode = urlConnection.getResponseCode();
+            System.out.println("responseCode : " + responseCode);
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            String line = "";
+            String res = "";
+            while ((line = br.readLine()) != null) {
+                res += line;
+            }
+
+            System.out.println("res : " + res);
+
+            JSONParser parser = new JSONParser();
+            JSONObject obj = (JSONObject) parser.parse(res);
+            // .get() 는 HashMap 클래스의 메소드 => JSONObject 클래스는 HashMap의 자식 클래스
+            // .get()은 HashMap에서 원하는 키의 값을 출력해주는 메소드
+            JSONObject kakaoAccount = (JSONObject) obj.get("kakao_account");
+            JSONObject properties = (JSONObject) obj.get("properties");
+
+            // 아마도 미리 정한 값들만 가져올 수 있을 듯
+            // 이 부분에 대해서 좀 더 알아야함
+            String id = obj.get("id").toString();
+            String nickname = properties.get("nickname").toString();
+            String ageRange = kakaoAccount.get("age_range").toString();
+
+            // result에 key - value 쌍으로 값을 넣어줌
+            result.put("id", id);
+            result.put("nickname", nickname);
+            result.put("age_range", ageRange);
+
+            br.close();
+
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }

@@ -17,11 +17,10 @@ public class KakaoService {
     // 인가 코드로 토큰을 얻는 과정
     public String getToken(String code) throws IOException {
         String host = "https://kauth.kakao.com/oauth/token";
-        /*
-        host의 url은 그냥 문자열임. 우리가 원하는건 문자열이 아니라 url임
-        그래서 URL를 활용해서 해당 문자열을 url로 바꿔줌
-        URL클래스를 이용하면 url을 Protocol, Host Name, File로 나눌 수 있음
-        */
+
+        // host의 url은 그냥 문자열임. 우리가 원하는건 문자열이 아니라 url임
+        // 그래서 URL를 활용해서 해당 문자열을 url로 바꿔줌
+        // URL클래스를 이용하면 url을 Protocol, Host Name, File로 나눌 수 있음
         URL url = new URL(host);
 
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
@@ -47,7 +46,7 @@ public class KakaoService {
 
             // StringBuilder은 문자열 끼리 더할 수 있게 해주는 클래스
             // 기존 String 클래스도 더할 수 있는데, 이는 시간이 노래걸림
-            // StringBuilder 클래스 String 클래스보다 훨씬 빠름름
+            // StringBuilder 클래스 String 클래스보다 훨씬 빠름
             StringBuilder sb = new StringBuilder();
             sb.append("grant_type=authorization_code");
             sb.append("&client_id=2aad40910868e3c5fa9594f8de34a07b");
@@ -107,8 +106,9 @@ public class KakaoService {
 
             // 요청(Response Data)의 데이터 타입을 정하는 것
             // 첫번째 파라미터 - the keyword by which the request is known
-            // 두번째 파라미터 - the value associated with it.
-            urlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
+            // 두번째 파라미터 - the value associated with it
+            // 카카오 로그인 토큰의 타입은 "Bearer"로 고정임
+            urlConnection.setRequestProperty("Authorization", "Bearer" + accessToken);
             urlConnection.setRequestMethod("GET"); // 조회라서 GET임
 
             int responseCode = urlConnection.getResponseCode();
@@ -159,7 +159,7 @@ public class KakaoService {
         try {
             URL url = new URL(host);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestProperty("Authorization", "Bearer " + accessToken);
+            urlConnection.setRequestProperty("Authorization", "Bearer" + accessToken);
             urlConnection.setRequestMethod("GET");
 
             BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
